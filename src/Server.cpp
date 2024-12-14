@@ -63,6 +63,8 @@ void createServer(int server_fd) {
             exit(EXIT_FAILURE);
         }
 
+        if(bytes_received == 0) continue;
+
         // Null-terminate and print the data received
         buffer[bytes_received] = '\0';
         std::string requestedString = std::string(buffer);
