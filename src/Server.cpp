@@ -93,6 +93,7 @@ void createServer(int server_fd) {
 
     // Close the server socket
     close(server_fd);
+    std::cout << "Closed connection " << "\n";
 }
 
 
