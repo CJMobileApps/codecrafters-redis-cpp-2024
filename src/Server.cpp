@@ -50,42 +50,44 @@ void createServer(int server_fd) {
     }
     std::cout << "Client connected\n";
 
-    // Buffer for reading data
-    char buffer[1024] = {};
+    while (true) {
+        // Buffer for reading data
+        char buffer[1024] = {};
 
-    // Read data from the client
-    const ssize_t bytes_received = read(new_socket, buffer, sizeof(buffer) - 1);
-    if (bytes_received < 0) {
-        perror("Read Failed");
-        close(new_socket);
-        close(server_fd);
-        exit(EXIT_FAILURE);
-    }
-
-    // Null-terminate and print the data received
-    buffer[bytes_received] = '\0';
-    std::string requestedString = std::string(buffer);
-
-    std::cout << "Received from client: " << "\n";
-
-    std::vector<std::string> pongResponseVector = processRequest(&requestedString);
-
-
-    std::cout << "Response sent to client: " << "\n";
-    for(std::string response : pongResponseVector) {
-
-        // Write and send response to the client
-        const char *c_response = response.c_str();
-
-        const ssize_t writeRequestClient = write(new_socket, c_response, response.size());
-        if (writeRequestClient < 0) {
-            perror("Send Response failed");
+        // Read data from the client
+        const ssize_t bytes_received = read(new_socket, buffer, sizeof(buffer) - 1);
+        if (bytes_received < 0) {
+            perror("Read Failed");
             close(new_socket);
             close(server_fd);
             exit(EXIT_FAILURE);
         }
 
-        std::cout << response;
+        // Null-terminate and print the data received
+        buffer[bytes_received] = '\0';
+        std::string requestedString = std::string(buffer);
+
+        std::cout << "Received from client: " << "\n";
+
+        std::vector<std::string> pongResponseVector = processRequest(&requestedString);
+
+
+        std::cout << "Response sent to client: " << "\n";
+        for(std::string response : pongResponseVector) {
+
+            // Write and send response to the client
+            const char *c_response = response.c_str();
+
+            const ssize_t writeRequestClient = write(new_socket, c_response, response.size());
+            if (writeRequestClient < 0) {
+                perror("Send Response failed");
+                close(new_socket);
+                close(server_fd);
+                exit(EXIT_FAILURE);
+            }
+
+            std::cout << response;
+        }
     }
 
     // Close the client socket
@@ -136,9 +138,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    while (true) {
-        createServer(server_fd);
-    }
+    createServer(server_fd);
 
     return 0;
 }
