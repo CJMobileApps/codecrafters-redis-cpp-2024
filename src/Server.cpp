@@ -89,11 +89,11 @@ void createServer(int server_fd) {
     }
 
     // Close the client socket
-    close(new_socket);
+    //close(new_socket);
 
     // Close the server socket
-    close(server_fd);
-    std::cout << "Closed connection " << "\n";
+    //close(server_fd);
+    //std::cout << "Closed connection " << "\n";
 }
 
 
@@ -136,7 +136,9 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    createServer(server_fd);
+    while (true) {
+        createServer(server_fd);
+    }
 
     return 0;
 }
