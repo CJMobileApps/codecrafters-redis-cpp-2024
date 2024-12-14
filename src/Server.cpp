@@ -1,13 +1,37 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sstream>
 #include <vector>
+
+std::vector<std::string> processRequest(std::string *requestedString) {
+    std::vector<std::string> pongResponseVector;
+
+    //convert string to lowercase
+    for (char &c: *requestedString) {
+        c = static_cast<char>(std::tolower(c));
+    }
+
+    // Dereference the pointer to get the actual string
+    std::stringstream requestedStream(*requestedString);
+    std::string line;
+
+    // Loop through the string, splitting by '\n'
+    while (std::getline(requestedStream, line, '\n')) {
+        std::cout << line << "\n";
+
+        if(line.find("ping") != std::string::npos) {
+            pongResponseVector.push_back("+PONG\r\n");
+        }
+    }
+
+    return pongResponseVector;
+}
 
 void createServer(int server_fd) {
     sockaddr_in client_addr{};
@@ -40,22 +64,29 @@ void createServer(int server_fd) {
 
     // Null-terminate and print the data received
     buffer[bytes_received] = '\0';
-    std::cout << "Received from client: " << buffer << "\n";
+    std::string requestedString = std::string(buffer);
 
-    // Write and send response to the client
-    std::string response = "+PONG\r\n";
-   const char *c_response = response.c_str();
+    std::cout << "Received from client: " << "\n";
 
-    const ssize_t writeRequestClient = write(new_socket, c_response, response.size());
-    if (writeRequestClient < 0) {
-        perror("Send Response failed");
-        close(new_socket);
-        close(server_fd);
-        exit(EXIT_FAILURE);
+    std::vector<std::string> pongResponseVector = processRequest(&requestedString);
+
+
+    std::cout << "Response sent to client: " << "\n";
+    for(std::string response : pongResponseVector) {
+
+        // Write and send response to the client
+        const char *c_response = response.c_str();
+
+        const ssize_t writeRequestClient = write(new_socket, c_response, response.size());
+        if (writeRequestClient < 0) {
+            perror("Send Response failed");
+            close(new_socket);
+            close(server_fd);
+            exit(EXIT_FAILURE);
+        }
+
+        std::cout << response;
     }
-    // printf("Response sent to client\n%s\n", response);
-    std::cout << "Response sent to client: " << response << "\n";
-
 
     // Close the client socket
     close(new_socket);
@@ -67,7 +98,7 @@ void createServer(int server_fd) {
 
 int main(int argc, char **argv) {
     // To test run command -> echo -ne '*1\r\n$4\r\nping\r\n' | nc localhost 6379
-
+    // To test run command -> echo -ne 'ping\r\nping' | nc localhost 6379
 
     // Flush after every std::cout / std::cerr
     std::cout << std::unitbuf;
